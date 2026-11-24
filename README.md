@@ -22,6 +22,9 @@ Model comparison (same folds, CV ROC-AUC): logistic regression **0.813**, HistGr
 random forest 0.799, extra trees 0.794, dummy 0.500. Predicting "no readmission" for everyone gives
 77.4 % accuracy, so accuracy is not used to pick models.
 
+An additional median-imputation benchmark of the candidate model families is documented in
+[`reports/model-benchmark-2026-11-24.md`](reports/model-benchmark-2026-11-24.md); it did not establish a reliable improvement over the primary model.
+
 ## Repository layout
 | path | purpose |
 |---|---|
