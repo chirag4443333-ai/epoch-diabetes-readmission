@@ -5,9 +5,11 @@ RANDOM_STATE = 42
 TEST_SIZE = 0.20  # untouched stratified holdout (used only when no official test file is given)
 N_SPLITS = 5  # stratified K-fold inside the development data
 MODEL_VERSION = "1.0.0"
-HIGH_RISK_PROBABILITY = 0.5  # prototype "High" tier: predicted risk is more likely than not
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+try:
+    PROJECT_ROOT = Path(__file__).resolve().parents[2]
+except NameError:  # inside the self-contained notebook there is no __file__
+    PROJECT_ROOT = Path.cwd()
 DEFAULT_TRAIN_PATH = PROJECT_ROOT / "data" / "diabetes_train_cleaned.csv"
 DEFAULT_REPORT_DIR = PROJECT_ROOT / "reports"
 DEFAULT_MODEL_DIR = PROJECT_ROOT / "models"
@@ -40,7 +42,7 @@ FORBIDDEN_FEATURES = {
     ID_COL: "patient identifier - no clinical meaning",
     "admission_date": "period-specific date with no established predictive value",
 }
-MISSING_FLAG_SUFFIX = "_was_missing"  # flags from Phase 1; used only to rebuild missingness
+MISSING_FLAG_SUFFIX = "_was_missing"  # Phase 1 flags; used only to rebuild missingness
 
 # Row-level rules from CLEANING_LOG.md (applied to raw-format files, e.g. a hidden test set).
 PLAUSIBLE_RANGES = {"age": (1, 120), "bmi": (10, 80), "waist_cm": (40, 250), "bp_systolic": (50, 300)}

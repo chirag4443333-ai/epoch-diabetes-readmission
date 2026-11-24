@@ -1,19 +1,21 @@
-# Event data - never commit (EPOCH rulebook p.7: do not upload event datasets)
+# Event data must never be committed (rulebook: do not upload event datasets publicly)
 data/
 *.csv
-!reports/results/*.csv
+!reports/tables/*.csv
 *.xlsx
 *.parquet
-# patient-level outputs
-*predictions*.csv
-# trained model binaries (rebuilt by: python -m readmission.train)
+*.zip
+
+# Trained models, patient-level predictions and executed notebooks stay local
 models/
+notebook_outputs/
+outputs/
 *.joblib
 *.pkl
-# generated figures and executed notebooks (may embed outputs)
 reports/figures/
-notebooks/executed/
-# Python tooling
+*predictions*
+
+# Python / Jupyter / environments
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -21,10 +23,4 @@ __pycache__/
 .ipynb_checkpoints/
 .venv/
 venv/
-build/
-dist/
-# local secrets
 .env
-*.pem
-*.key
-secrets*

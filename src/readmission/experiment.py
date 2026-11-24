@@ -57,8 +57,7 @@ def compare_models(X, y, imputation, add_indicator, quick=False):
     for name, (estimator, grid, scale) in candidate_models(quick).items():
         start = time.time()
         pipe = build_pipeline(estimator, imputation, add_indicator, scale)
-        search = GridSearchCV(pipe, grid, cv=cv_folds(), scoring=SCORING, refit=False).fit(X, y)
-        res = search.cv_results_
+        res = GridSearchCV(pipe, grid, cv=cv_folds(), scoring=SCORING, refit=False).fit(X, y).cv_results_
         best = int(np.argmax(res["mean_test_roc_auc"]))
         params = res["params"][best]
         folds = np.array([res[f"split{k}_test_roc_auc"][best] for k in range(N_SPLITS)])
@@ -95,6 +94,6 @@ def build_final_pipeline(name, best_params, imputation, add_indicator, quick=Fal
 
 def threshold_stability(y, oof_proba, beta=2.0):
     """F-beta-optimal threshold re-computed inside each validation fold (how stable is it?)."""
-    y = pd.Series(y).reset_index(drop=True)
+    y = pd.Series(np.asarray(y))
     return [choose_threshold(y.iloc[val], np.asarray(oof_proba)[val], beta)
             for _, val in cv_folds().split(np.zeros(len(y)), y)]

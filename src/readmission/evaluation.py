@@ -48,11 +48,10 @@ def threshold_table(y_true, proba, thresholds=None):
 def choose_threshold(y_true, proba, beta=2.0):
     """Threshold maximising F-beta (beta=2: recall weighted above precision) on out-of-fold
     development predictions. Never call this with holdout / test labels."""
-    grid = np.round(np.arange(0.05, 0.951, 0.01), 2)
     y = np.asarray(y_true).astype(int)
     p = np.asarray(proba, dtype=float)
     best_t, best_score = 0.5, -1.0
-    for t in grid:
+    for t in np.round(np.arange(0.05, 0.951, 0.01), 2):
         pred = p >= t
         tp = (pred & (y == 1)).sum()
         precision, recall = _ratio(tp, pred.sum()), _ratio(tp, (y == 1).sum())
@@ -63,7 +62,7 @@ def choose_threshold(y_true, proba, beta=2.0):
 
 
 def bootstrap_ci(y_true, proba, metric, n_boot=1000, seed=RANDOM_STATE):
-    """Percentile 95% interval of a metric(y, p) by resampling patients."""
+    """Percentile 95% interval of metric(y, p) by resampling patients with replacement."""
     rng = np.random.default_rng(seed)
     y, p = np.asarray(y_true).astype(int), np.asarray(proba, dtype=float)
     stats = []
@@ -71,12 +70,12 @@ def bootstrap_ci(y_true, proba, metric, n_boot=1000, seed=RANDOM_STATE):
         idx = rng.integers(0, len(y), len(y))
         if y[idx].min() != y[idx].max():
             stats.append(metric(y[idx], p[idx]))
-    return float(np.percentile(stats, 2.5)), float(np.percentile(stats, 97.5))
+    return [float(np.percentile(stats, 2.5)), float(np.percentile(stats, 97.5))]
 
 
 # ----------------------------------------------------------------------------- figures
 def plot_cv_comparison(fold_scores, path=None):
-    """Box plot of per-fold ROC-AUC for every model (dict name -> list of fold scores)."""
+    """Box plot of per-fold ROC-AUC for every model ({name: [fold scores]})."""
     fig, ax = plt.subplots(figsize=(7, 3.8))
     names = list(fold_scores)
     ax.boxplot([fold_scores[n] for n in names], vert=False)
@@ -95,9 +94,9 @@ def plot_roc_pr(curves, path=None):
         ax1.plot(fpr, tpr, label=f"{label} (AUC {roc_auc_score(y, p):.3f})")
         ax2.plot(rec, prec, label=f"{label} (AP {average_precision_score(y, p):.3f})")
     ax1.plot([0, 1], [0, 1], "k--", lw=0.8)
-    first_y = np.asarray(next(iter(curves.values()))[0])
-    ax2.axhline(first_y.mean(), color="k", ls="--", lw=0.8, label=f"prevalence {first_y.mean():.3f}")
-    ax1.set(xlabel="False positive rate", ylabel="True positive rate (recall)", title="ROC curve")
+    prevalence = float(np.mean(next(iter(curves.values()))[0]))
+    ax2.axhline(prevalence, color="k", ls="--", lw=0.8, label=f"prevalence {prevalence:.3f}")
+    ax1.set(xlabel="False positive rate", ylabel="Recall (sensitivity)", title="ROC curve")
     ax2.set(xlabel="Recall", ylabel="Precision", title="Precision-recall curve")
     ax1.legend(fontsize=8)
     ax2.legend(fontsize=8)

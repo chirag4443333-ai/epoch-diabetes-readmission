@@ -32,7 +32,7 @@ class FeatureGuard(BaseEstimator, TransformerMixin):
 
 
 def audit_leakage(df, max_single_feature_auc=0.95):
-    """Prove the known leak exists and that no allowed feature is suspiciously perfect."""
+    """Show the known leak exists, and fail if any allowed feature is suspiciously perfect."""
     y = df[TARGET].astype(int)
     report = {}
     if LEAKAGE_COL in df:
@@ -43,8 +43,7 @@ def audit_leakage(df, max_single_feature_auc=0.95):
     for col in FEATURES:
         x = df[col]
         if pd.api.types.is_numeric_dtype(x):
-            mask = x.notna()
-            auc = roc_auc_score(y[mask], x[mask])
+            auc = roc_auc_score(y[x.notna()], x[x.notna()])
         else:
             auc = roc_auc_score(y, x.map(y.groupby(x).mean()))  # category -> its own rate (in-sample)
         single[col] = round(float(max(auc, 1 - auc)), 4)

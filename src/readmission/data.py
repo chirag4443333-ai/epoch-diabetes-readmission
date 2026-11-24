@@ -10,7 +10,6 @@ memory so that imputation is learned inside each training fold only.
 No statistics are learned here, so this step cannot leak information.
 """
 import difflib
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -81,7 +80,7 @@ def harmonise(raw):
 
 
 def restore_missing(df, raw):
-    """Set values flagged by Phase 1 as originally missing back to NaN (copy, file untouched)."""
+    """Set values flagged by Phase 1 as originally missing back to NaN (copy; file untouched)."""
     out = df.copy()
     for col in NUMERIC_FEATURES:
         flag = col + MISSING_FLAG_SUFFIX
@@ -94,15 +93,15 @@ def detect_format(raw):
     return "cleaned" if any(c.endswith(MISSING_FLAG_SUFFIX) for c in raw.columns) else "raw"
 
 
-def load_dataset(source, is_training=True):
-    """Read a CSV path (or an already-loaded DataFrame) in either format -> standard frame.
+def load_dataset(path, is_training=True):
+    """Read a CSV in either format and return the standard frame.
 
     Training files are de-duplicated (Phase 1 rule: identical records after
     harmonisation, first copy kept). Test files are never filtered, so every
     row receives a prediction.
     """
-    raw = pd.read_csv(source, dtype=str) if isinstance(source, (str, Path)) else source.copy()
-    raw.columns = [str(c).strip() for c in raw.columns]
+    raw = pd.read_csv(path, dtype=str, keep_default_na=True)
+    raw.columns = [c.strip() for c in raw.columns]
     df = restore_missing(harmonise(raw), raw)
     df.attrs["source_format"] = detect_format(raw)
     df.attrs["rows_read"] = len(raw)
@@ -132,15 +131,17 @@ def validate_dataset(df, require_target=True):
             raise DataValidationError(f"target column '{TARGET}' is missing")
         if df[TARGET].isna().any() or not set(df[TARGET].unique()) <= {0, 1}:
             raise DataValidationError("target must be binary 0/1 with no missing values")
+        if ID_COL in df and df[ID_COL].duplicated().any():
+            raise DataValidationError("duplicate patient identifiers in training data")
         summary.update(positives=int(df[TARGET].sum()), negatives=int((df[TARGET] == 0).sum()),
                        prevalence=round(float(df[TARGET].mean()), 4))
-    if ID_COL in df and require_target and df[ID_COL].duplicated().any():
-        raise DataValidationError("duplicate patient identifiers in training data")
     return summary
 
 
 def features_and_target(df):
-    """Feature matrix in the exact training order (whitelist) and the target."""
+    """Feature matrix in the exact training order (whitelist) and the target (None if absent)."""
     X = df[FEATURES].copy()
-    y = df[TARGET].astype(int) if TARGET in df else None
-    return X, y
+    if TARGET not in df or df[TARGET].isna().all():
+        return X, None
+    y = df[TARGET]
+    return X, (y.astype(int) if y.notna().all() else y)

@@ -5,18 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "epoch-diabetes-readmission"
 version = "1.0.0"
-description = "EPOCH Datathon 2026 - interpretable 30-day readmission risk prototype (diabetes theme)"
+description = "EPOCH Datathon 2026 - 30-day readmission risk prototype for diabetes patients at discharge"
+readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["numpy>=1.24", "pandas>=2.0", "scikit-learn>=1.4,<1.7", "matplotlib>=3.7", "joblib>=1.3"]
+dependencies = ["numpy>=1.24", "pandas>=2.0", "scikit-learn>=1.3,<1.8", "matplotlib>=3.7", "joblib>=1.3"]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.4", "nbformat>=5.9", "nbclient>=0.9", "ipykernel>=6.0"]
+dev = ["pytest>=7", "nbformat>=5.9", "nbclient>=0.8", "ipykernel>=6"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "tests"]
 testpaths = ["tests"]
-addopts = "-q"
-filterwarnings = ["ignore::sklearn.exceptions.ConvergenceWarning", "ignore:Found unknown categories"]
+filterwarnings = ["ignore::sklearn.exceptions.ConvergenceWarning", "ignore::UserWarning"]

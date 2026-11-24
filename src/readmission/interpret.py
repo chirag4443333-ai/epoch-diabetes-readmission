@@ -12,7 +12,7 @@ AGE_BANDS, AGE_LABELS = [0, 45, 55, 65, 200], ["<45", "45-54", "55-64", "65+"]
 
 
 def logistic_coefficients(pipeline):
-    """Coefficients on standardised numeric inputs / one-hot categories (log-odds per SD or vs. absent)."""
+    """Coefficients on standardised numeric inputs (log-odds per 1 SD) and one-hot categories."""
     names = pipeline.named_steps["preprocess"].get_feature_names_out()
     coef = pipeline.named_steps["model"].coef_[0]
     table = pd.DataFrame({"feature": names, "coefficient": coef, "odds_ratio": np.exp(coef)})
@@ -20,7 +20,7 @@ def logistic_coefficients(pipeline):
 
 
 def native_importance(pipeline):
-    """Impurity / split-based importance for tree models (None for other models)."""
+    """Impurity-based importance for tree ensembles (None for other models)."""
     model = pipeline.named_steps["model"]
     if not hasattr(model, "feature_importances_"):
         return None
